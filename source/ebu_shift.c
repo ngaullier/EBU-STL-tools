@@ -141,7 +141,7 @@ int main(int argc, const char** argv) {
 	}
 
 
-	FILE* source = fopen(input,"r");
+	FILE* source = fopen(input,"rb");
 	if(source == NULL){
 		fclose(source);
 		return 1;
@@ -241,7 +241,7 @@ int main(int argc, const char** argv) {
 	}
 
 
-	FILE* dest = fopen(output,"w");
+	FILE* dest = fopen(output,"wb");
 	if(dest == NULL){
 		fclose(dest);
 		return 2;
