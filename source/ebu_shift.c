@@ -28,6 +28,7 @@ void print_help(int argc, const char** argv){
 	printf("\t-CO\tSet the CO(Country of Origin) value of the GSI block.\n\t\tformat:\t3 ASCII char\n");
 	printf("\t-Teletextfix\tWill add teletext control chars to every line of subtitle.\n");
 	printf("\t-rmSPE\tRemove any character superior to the value 0xA0 from the subtitles\n");
+	printf("\t-x\tDon't fix: do not replace SRT tags, do not remove double line returns etc.\n");
 }
 
 void CRLFtoTeletext(char * str,int position){
@@ -74,6 +75,7 @@ int main(int argc, const char** argv) {
 	char CPN[4] = "   ";
 	char CO[4] = "FRA";
 	int Teletextfix = 0;
+	int DontFix = 0;
 	int rmSPE = 0;
 	for (i = 1; i < argc; ++i)
 	{
@@ -124,6 +126,9 @@ int main(int argc, const char** argv) {
 		}
 		else if(!strcmp(argv[i],"-rmSPE")){
 			rmSPE = 1;
+		}
+		else if(!strcmp(argv[i],"-x")){
+			DontFix = 1;
 		}
 		else{
 			output = (char *)argv[i];
@@ -205,7 +210,8 @@ int main(int argc, const char** argv) {
 	}
 
 
-	BelleNuitFix(ebu);
+	if (!DontFix)
+		BelleNuitFix(ebu);
 
 
 	printf("Shifting: %02d:%02d:%02d:%02d\n",shift->hours,shift->minutes,shift->seconds,shift->frames);
