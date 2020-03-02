@@ -6,7 +6,7 @@
 char* str_shift(char* source, int position, int shift){
 	int i = 10;
 	if(shift < 0){
-		source = realloc(source,(strlen(source)-shift)*sizeof(char));
+		source = realloc(source,(strlen(source)+1-shift)*sizeof(char));
 		int len = strlen(source);
 		for(i=len; i < len-shift;i++){
 			source[i] = '\n';
@@ -18,9 +18,9 @@ char* str_shift(char* source, int position, int shift){
 		for(i = position; i < strlen(source)-shift; i++){
 			source[i] = source[i+shift];
 		}
-		source[strlen(source)-shift-1] = '\0';
+		source[strlen(source)-shift] = '\0';
 
-		source = realloc(source,strlen(source)*sizeof(char));
+		source = realloc(source,(strlen(source)+1)*sizeof(char));
 	}
 	else{
 		for(i = strlen(source); i >= position; i--){

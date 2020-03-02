@@ -23,35 +23,35 @@ short unsigned int isBelleNuit(const struct EBU* ebu){
 }
 
 unsigned char* SanitizeSrtString(unsigned char* str, int length){
-	char* text = malloc(sizeof(char) * length);
+	char* text = malloc(sizeof(char) * (length+1));
 	 strncpy(text,str,length);
-	text[length-1] = '\0';
+	text[length] = '\0';
 
 	char single[2] = " ";
     single[0] = 0x80;
-    str_replace(text,"<I>",single);
-    str_replace(text,"<i>",single);
+    text = str_replace(text,"<I>",single);
+    text = str_replace(text,"<i>",single);
     single[0] = 0x81;
-    str_replace(text,"</I>",single);
-    str_replace(text,"</i>",single);
+    text = str_replace(text,"</I>",single);
+    text = str_replace(text,"</i>",single);
     single[0] = 0x82;
-    str_replace(text,"<U>",single);
-    str_replace(text,"<u>",single);
+    text = str_replace(text,"<U>",single);
+    text = str_replace(text,"<u>",single);
     single[0] = 0x83;
-    str_replace(text,"</U>",single);
-    str_replace(text,"</u>",single);
+    text = str_replace(text,"</U>",single);
+    text = str_replace(text,"</u>",single);
     single[0] = 0x84;
-    str_replace(text,"<B>",single);
-    str_replace(text,"<b>",single);
+    text = str_replace(text,"<B>",single);
+    text = str_replace(text,"<b>",single);
     single[0] = 0x85;
-    str_replace(text,"</B>",single);
-    str_replace(text,"</b>",single);
+    text = str_replace(text,"</B>",single);
+    text = str_replace(text,"</b>",single);
 
     char triple[3] = "  ";
     triple[0] = 0x8A;
     triple[1] = 0x8A;
     single[0] = 0x8A;
-    str_replace(text,triple,single);
+    text = str_replace(text,triple,single);
 
     if(strlen(text) > length){
     	text = realloc(text,length * sizeof(char));
@@ -60,13 +60,11 @@ unsigned char* SanitizeSrtString(unsigned char* str, int length){
     	int len = strlen(text);
     	text = realloc(text,length * sizeof(char));
     	int i = 0;
-    	for (i = len-1; i < length; ++i)
+    	for (i = len; i < length; ++i)
     	{
     		text[i] = 0x8F;
     	}
     }
-
-    text[length-1] = str[length-1];
 
     return text;
 }
@@ -89,9 +87,9 @@ void BelleNuitFix(const struct EBU* ebu){
 }
 
 unsigned char* TeletextTrimControlLine(unsigned char* str, int length){
-	char* text = malloc(sizeof(char) * length);
+	char* text = malloc(sizeof(char) * (length+1));
 	 strncpy(text,str,length);
-	text[length-1] = '\0';
+	text[length] = '\0';
 
 	char single[5] = "    ";
 	single[0] = 0x0D;
@@ -102,7 +100,7 @@ unsigned char* TeletextTrimControlLine(unsigned char* str, int length){
     char triple[3] = "  ";
     triple[0] = 0x0B;
 	triple[1] = 0x0B;
-    str_replace(text,triple,single);
+    text = str_replace(text,triple,single);
 
     if(strlen(text) > length){
     	text = realloc(text,length * sizeof(char));
@@ -111,13 +109,11 @@ unsigned char* TeletextTrimControlLine(unsigned char* str, int length){
     	int len = strlen(text);
     	text = realloc(text,length * sizeof(char));
     	int i = 0;
-    	for (i = len-1; i < length; ++i)
+    	for (i = len; i < length; ++i)
     	{
     		text[i] = 0x8F;
     	}
     }
-
-    text[length-1] = str[length-1];
 
     return text;
 }

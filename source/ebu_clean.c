@@ -47,7 +47,7 @@ int main(int argc, const char** argv) {
 
 			strncpy(line,ebu->tti[i].TF,112);
 			line[111] = '\0';
-			str_replace(line,search,"");
+			line = str_replace(line,search,"");
 			free(line);
 			strncpy(ebu->tti[i].TF,line,112);	
 		}
