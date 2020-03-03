@@ -1,6 +1,7 @@
 #ifndef EBU_H
 #define EBU_H value
 
+#include <stdio.h>
 
 //STL HEADER
 struct EBU_GSI{
