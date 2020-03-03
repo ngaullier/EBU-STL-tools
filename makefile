@@ -30,7 +30,7 @@ ebu_rename: ebu_rename.o ebu.o string_utils.o
 	mkdir -p bin
 	gcc $(VERSION_NUMBER) -std=c99 -o bin/ebu_rename ebu_rename.o ebu.o string_utils.o -lm
 
-%.o: %.c
+%.o: %.c ebu.h
 	gcc $(VERSION_NUMBER) -std=c99 -c $^ -lm
 
 install: all
