@@ -69,7 +69,7 @@ unsigned char* SanitizeSrtString(unsigned char* str, int length){
     return text;
 }
 
-void BelleNuitFix(const struct EBU* ebu){
+void BelleNuitFix(struct EBU* ebu){
 	if(isBelleNuit(ebu)){
 		strncpy(ebu->gsi.TCF,ebu->gsi.TCP,8);
 		strncpy(ebu->gsi.TCP,"00000000",8);
@@ -118,7 +118,7 @@ unsigned char* TeletextTrimControlLine(unsigned char* str, int length){
     return text;
 }
 
-void TeletextTrimControl(const struct EBU* ebu){
+void TeletextTrimControl(struct EBU* ebu){
 	if(isBelleNuit(ebu)){
 		strncpy(ebu->gsi.TCF,ebu->gsi.TCP,8);
 		strncpy(ebu->gsi.TCP,"00000000",8);
