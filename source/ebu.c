@@ -181,13 +181,14 @@ struct EBU* parseEBU(FILE* f){
 	sprintf(ebu->gsi.TNB, "%05d", nTNB);
 	//printf("TNB : : %d \n",nTNB);
 
+	ebu->tti_invalid = (int *) calloc(nTNB, sizeof(int));
 	ebu->tti = (struct EBU_TTI*) malloc(sizeof(struct EBU_TTI) * nTNB);
 	fread(ebu->tti, sizeof(struct EBU_TTI), nTNB, f);
 
 	return ebu;
 }
 
-void saveEBU(FILE* f,const struct EBU * ebu){
+void saveEBU(FILE* f, struct EBU * ebu){
 	fwrite(&(ebu->gsi),1024,1,f);
 
 	unsigned char TNB[6];
@@ -195,7 +196,22 @@ void saveEBU(FILE* f,const struct EBU * ebu){
 	TNB[5] = '\0';
 	int nTNB = atoi(TNB);
 
-	fwrite(ebu->tti,128,nTNB,f);
+	int i;
+    int TNBnew = 0;
+	for (i = 0; i<nTNB; i++) {
+		if (!ebu->tti_invalid[i]) {
+			fwrite(&ebu->tti[i],128,1,f);
+			TNBnew++;
+		}
+	}
+
+	// Rewrite TNB if modified and set TNS=TNB
+	if (nTNB != TNBnew) {
+		sprintf(ebu->gsi.TNB, "%05d", TNBnew);
+		sprintf(ebu->gsi.TNS, "%05d", TNBnew);
+		fseek(f, 0, SEEK_SET);
+		fwrite(&(ebu->gsi),1024,1,f);
+	}
 }
 
 struct EBU_TC* charToTC(const unsigned char TC[8]){
@@ -315,8 +331,16 @@ int shiftTCs(struct EBU* ebu, const struct EBU_TC* shift, const int positive, co
 
 	int i = 0;
 	for(i = 0; i < nTNB; i++){
-		shiftTC(&(ebu->tti[i].TCI),shift,positive);
-	  	shiftTC(&(ebu->tti[i].TCO),shift,positive);
+		struct EBU_TC tcin_original;
+		memcpy(&tcin_original, &(ebu->tti[i].TCI), sizeof(tcin_original));
+		ebu->tti_invalid[i] = 0;
+		if (shiftTC(&(ebu->tti[i].TCI),shift,positive))
+			ebu->tti_invalid[i] = 1;
+		else if (shiftTC(&(ebu->tti[i].TCO),shift,positive))
+			ebu->tti_invalid[i] = 1;
+		if (ebu->tti_invalid[i])
+			fprintf(stderr, "TC %02d:%02d:%02d:%02d cannot be shifted : subtitle will be dropped\n", tcin_original.hours, tcin_original.minutes, tcin_original.seconds, tcin_original.frames);
+
 	}
 
 	return 0;

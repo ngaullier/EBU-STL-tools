@@ -63,6 +63,7 @@ struct EBU_TTI{
 struct EBU{
 	struct EBU_GSI gsi;
 	struct EBU_TTI* tti;
+	int* tti_invalid;
 };
 
 typedef struct EBU EBU;
@@ -71,7 +72,7 @@ typedef struct EBU_TC EBU_TC;
 typedef struct EBU_GSI EBU_GSI;
 
 struct EBU* parseEBU(FILE* f);
-void saveEBU(FILE* f, const struct EBU* ebu);
+void saveEBU(FILE* f, struct EBU* ebu);
 struct EBU_TC* charToTC(const unsigned char TC[8]);
 void TCToChar(unsigned char tc[8],const struct EBU_TC TC);
 int shiftTC(struct EBU_TC* tc, const struct EBU_TC* shift, const short int positive);
