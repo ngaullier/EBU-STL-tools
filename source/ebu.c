@@ -235,8 +235,7 @@ void TCToChar(unsigned char tc[8],const struct EBU_TC TC){
 	return;
 }
 
-struct EBU_TC shiftTC(const struct EBU_TC* tc, const struct EBU_TC* shift, const short int positive){
-	struct EBU_TC newTC;
+int shiftTC(struct EBU_TC* tc, const struct EBU_TC* shift, const short int positive){
 	int carry = 0;
 	int frames = (int) (tc->frames) - positive * (int) (shift->frames);
 	if(frames < 0){
@@ -247,7 +246,7 @@ struct EBU_TC shiftTC(const struct EBU_TC* tc, const struct EBU_TC* shift, const
 		carry = -1;
 		frames -= 25;
 	}
-	newTC.frames = (unsigned char) frames;
+	tc->frames = (unsigned char) frames;
 
 	int seconds = (int) tc->seconds - positive * (int) shift->seconds - carry;
 	carry = 0;
@@ -259,7 +258,7 @@ struct EBU_TC shiftTC(const struct EBU_TC* tc, const struct EBU_TC* shift, const
 		carry = -1;
 		seconds -= 60;
 	}
-	newTC.seconds = (unsigned char) seconds;
+	tc->seconds = (unsigned char) seconds;
 
 	int minutes = (int) tc->minutes - positive * (int) shift->minutes - carry;
 	carry = 0;
@@ -271,35 +270,37 @@ struct EBU_TC shiftTC(const struct EBU_TC* tc, const struct EBU_TC* shift, const
 		carry = -1;
 		minutes -= 60;
 	}
-	newTC.minutes = (unsigned char) minutes;
+	tc->minutes = (unsigned char) minutes;
 
 	int hours = (int) tc->hours - positive * (int) shift->hours - carry;
-	if(hours < 0){
-		hours = 0;
+	if(hours < 0 || hours > 23) {
+		return 1;
 	}
-	else if(hours > 99){
-		hours = 99;
-	}
-	newTC.hours = (unsigned char) hours;
+	tc->hours = (unsigned char) hours;
 
-	return newTC;
+	return 0;
 }
 
-void shiftTCs(struct EBU* ebu, const struct EBU_TC* shift, const int positive){
+int shiftTCs(struct EBU* ebu, const struct EBU_TC* shift, const int positive){
 	struct EBU_TC* tc = charToTC(ebu->gsi.TCF);
-	struct EBU_TC newtc = shiftTC(tc,shift,positive);
-	free(tc);
+	if (shiftTC(tc,shift,positive)) {
+		free(tc);
+		return 1;
+	}
 
-	TCToChar(ebu->gsi.TCF,newtc);
+	TCToChar(ebu->gsi.TCF,*tc);
 
 	tc = charToTC(ebu->gsi.TCP);
-	newtc = shiftTC(tc,shift,positive);
-	printf("%02d:%02d:%02d:%02d\n",newtc.hours,newtc.minutes,newtc.seconds,newtc.frames);
+	if (shiftTC(tc,shift,positive)) {
+		free(tc);
+		return 1;
+	}
+	printf("%02d:%02d:%02d:%02d\n",tc->hours,tc->minutes,tc->seconds,tc->frames);
 
 
 	
+	TCToChar(ebu->gsi.TCP,*tc);
 	free(tc);
-	TCToChar(ebu->gsi.TCP,newtc);
 
 	unsigned char TNB[6];
 	strncpy(TNB,ebu->gsi.TNB,5);
@@ -308,10 +309,11 @@ void shiftTCs(struct EBU* ebu, const struct EBU_TC* shift, const int positive){
 
 	int i = 0;
 	for(i = 0; i < nTNB; i++){
-		ebu->tti[i].TCI = shiftTC(&(ebu->tti[i].TCI),shift,positive);
-	  	ebu->tti[i].TCO = shiftTC(&(ebu->tti[i].TCO),shift,positive);
+		shiftTC(&(ebu->tti[i].TCI),shift,positive);
+	  	shiftTC(&(ebu->tti[i].TCO),shift,positive);
 	}
 
+	return 0;
 }
 
 void EBUTC30to25(struct EBU_TC* tc){

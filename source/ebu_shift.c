@@ -20,7 +20,7 @@ void print_help(int argc, const char** argv){
 
 	printf("Options:\n");
 	printf("\t-t\tShift timecode with value set as param.\n\t\tformat:\t[-]HHMMSSFF\n");
-	printf("\t-s\tShift timecode to make them coincide with param\n\t\tformat:\t[-]HHMMSSFF\n");
+	printf("\t-s\tShift timecode to make them coincide with param\n\t\tformat:\tHHMMSSFF\n");
 	printf("\t-TCP\tWill make only the start timecode to shift. Any other timecode won't change. Permit to change delay in the subtitle. To use with -t or -s option\n");
 	printf("\t-DSC\tSet the DSC(Display Standard Code) value of the GSI block. May be set as 0, 1 or 2 only.\n");
 	printf("\t-LC\tSet the LC(Language Code) value of the GSI block.\n\t\tformat:\tHH where HH is an hexadecimal number.\n");
@@ -67,7 +67,7 @@ int main(int argc, const char** argv) {
 	char * input = NULL;
 	char * output = NULL;
 	int nshift = 0;
-	int start = -1;
+	int ShiftCmd = 0;
 	int i = 0;
 	int onlyTCP = 0;
 	char DSC[2] = " ";
@@ -87,14 +87,16 @@ int main(int argc, const char** argv) {
 		}
 		else if(!strcmp(argv[i],"-t")){
 			i++;
+			ShiftCmd = 1;
 			if(i < argc){
 				nshift = atoi(argv[i]);
 			}
 		}
 		else if(!strcmp(argv[i],"-s")){
 			i++;
+			ShiftCmd = 2;
 			if(i < argc){
-				start = atoi(argv[i]);
+				nshift = atoi(argv[i]);
 			}
 		}
 		else if(!strcmp(argv[i],"-TCP")){
@@ -154,60 +156,33 @@ int main(int argc, const char** argv) {
 	struct EBU* ebu = parseEBU(source);
 	fclose(source);
 
-	struct EBU_TC* shift;
+	int positive = nshift>=0?1:-1;
+	if(positive < 0)
+		nshift *= -1;
 
-	int positive = 1;
+	struct EBU_TC* shift = malloc(sizeof(struct EBU_TC));
+	shift->frames = nshift%100;
+	nshift /= 100;
+	shift->seconds = nshift%100;
+	nshift /= 100;
+	shift->minutes = nshift%100;
+	nshift /= 100;
+	shift->hours = nshift%100;
 
-	if(start >= 0){
-		struct EBU_TC* startTC = malloc(sizeof(struct EBU_TC));
-
-		startTC->frames = start%100;
-		start /= 100;
-		startTC->seconds = start%100;
-		start /= 100;
-		startTC->minutes = start%100;
-		start /= 100;
-		startTC->hours = start%100;
-
+	if(ShiftCmd == 2){
 		struct EBU_TC* TCP = charToTC(ebu->gsi.TCP);
-		struct EBU_TC shift2 = shiftTC(TCP,startTC,1);
-		free(TCP);
-
-		shift = malloc(sizeof(struct EBU_TC));
-		shift->frames = shift2.frames;
-		shift->seconds = shift2.seconds;
-		shift->minutes = shift2.minutes;
-		shift->hours = shift2.hours;
-
-		free(startTC);
-	}
-	else if(nshift == 0){
-		if(isBelleNuit(ebu)){
-			shift = malloc(sizeof(struct EBU_TC));
-			shift->frames = 0;
-			shift->seconds = 0;
-			shift->minutes = 0;
-			shift->hours = 0;
-
-			
+		if (shiftTC(TCP,shift,positive)) {
+			positive *= -1;
+			TCP = charToTC(ebu->gsi.TCP);
+			if (shiftTC(TCP,shift,positive)) {
+				fprintf(stderr, "Invalid shift value\n");
+				return 1;
+			}
 		}
-		else{
-			shift = charToTC(ebu->gsi.TCP);
-		}
+		memcpy(shift, TCP, sizeof(shift));
 	}
-	else{
-		positive = nshift>0?1:-1;
-		if(positive < 0)
-			nshift *= -1;
-		shift = malloc(sizeof(struct EBU_TC));
-		shift->frames = nshift%100;
-		nshift /= 100;
-		shift->seconds = nshift%100;
-		nshift /= 100;
-		shift->minutes = nshift%100;
-		nshift /= 100;
-		shift->hours = nshift%100;
-	}
+	else if(ShiftCmd == 0 && !isBelleNuit(ebu))
+		shift = charToTC(ebu->gsi.TCP);
 
 
 	if (!DontFix)
@@ -216,12 +191,15 @@ int main(int argc, const char** argv) {
 
 	printf("Shifting: %02d:%02d:%02d:%02d\n",shift->hours,shift->minutes,shift->seconds,shift->frames);
 	if(onlyTCP){
-		struct EBU_TC* TCP = charToTC(ebu->gsi.TCP);
-		struct EBU_TC tc = shiftTC(TCP,shift,positive);
-		TCToChar(ebu->gsi.TCP,tc);
+		struct EBU_TC* tc = charToTC(ebu->gsi.TCP);
+		shiftTC(tc,shift,positive);
+		TCToChar(ebu->gsi.TCP,*tc);
 	}
 	else{
-		shiftTCs(ebu,shift,positive);
+		if (shiftTCs(ebu,shift,positive)) {
+			fprintf(stderr, "Shifting failed\n");
+			return 1;
+		}
 	}
 	free(shift);
 
