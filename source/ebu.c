@@ -167,14 +167,18 @@ void TrimEBU(struct EBU* ebu,const struct EBU_TC* tc){
 
 struct EBU* parseEBU(FILE* f){
 	struct EBU* ebu = malloc(sizeof(struct EBU));
+    long filesize;
+    fseek(f, 0, SEEK_END);
+    filesize = ftell(f);
+    fseek(f, 0, SEEK_SET);
 
 	fread(&(ebu->gsi), 1024, 1, f);
 
-	unsigned char TNB[6];
-	strncpy(TNB,ebu->gsi.TNB,5);
-	TNB[5] = '\0';
-	int nTNB = atoi(TNB);
-
+	// do not trust TNB from GSI
+	int nTNB = (filesize-1024)/128;
+	if (nTNB > 99999)
+		return NULL;
+	sprintf(ebu->gsi.TNB, "%05d", nTNB);
 	//printf("TNB : : %d \n",nTNB);
 
 	ebu->tti = (struct EBU_TTI*) malloc(sizeof(struct EBU_TTI) * nTNB);
