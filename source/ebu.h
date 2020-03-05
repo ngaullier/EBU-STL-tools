@@ -75,7 +75,7 @@ void saveEBU(FILE* f, const struct EBU* ebu);
 struct EBU_TC* charToTC(const unsigned char TC[8]);
 void TCToChar(unsigned char tc[8],const struct EBU_TC TC);
 int shiftTC(struct EBU_TC* tc, const struct EBU_TC* shift, const short int positive);
-int shiftTCs(struct EBU* ebu, const struct EBU_TC* shift, const int positive);
+int shiftTCs(struct EBU* ebu, const struct EBU_TC* shift, const int positive, const int excludeTCPTCF);
 short unsigned int isBelleNuit(const struct EBU* ebu);
 void TrimEBU(struct EBU* ebu,const struct EBU_TC* tc);
 int TCcmp(const struct EBU_TC* tc1, const struct EBU_TC* tc2);

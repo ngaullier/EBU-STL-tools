@@ -22,6 +22,7 @@ void print_help(int argc, const char** argv){
 	printf("\t-t\tShift timecode with value set as param.\n\t\tformat:\t[-]HHMMSSFF\n");
 	printf("\t-s\tShift timecode to make them coincide with param\n\t\tformat:\tHHMMSSFF\n");
 	printf("\t-TCP\tWill make only the start timecode to shift. Any other timecode won't change. Permit to change delay in the subtitle. To use with -t or -s option\n");
+	printf("\t-xTCP\tWill NOT shift the start timecode. Permit to change delay in the subtitle. To use with -t or -s option\n");
 	printf("\t-DSC\tSet the DSC(Display Standard Code) value of the GSI block. May be set as 0, 1 or 2 only.\n");
 	printf("\t-LC\tSet the LC(Language Code) value of the GSI block.\n\t\tformat:\tHH where HH is an hexadecimal number.\n");
 	printf("\t-CPN\tSet the CPN(Code Page Number) value of the GSI block.\n\t\tvalues:\n\t\t\t437\tUnited State\n\t\t\t850\tMultilingual\n\t\t\t860\tPortugal\n\t\t\t863\tCanada-French\n\t\t\t865\tNordic\n");
@@ -70,6 +71,7 @@ int main(int argc, const char** argv) {
 	int ShiftCmd = 0;
 	int i = 0;
 	int onlyTCP = 0;
+	int xTCP = 0;
 	char DSC[2] = " ";
 	char LC[3] = "0F";
 	char CPN[4] = "   ";
@@ -101,6 +103,9 @@ int main(int argc, const char** argv) {
 		}
 		else if(!strcmp(argv[i],"-TCP")){
 			onlyTCP = 1;
+		}
+		else if(!strcmp(argv[i],"-xTCP")){
+			xTCP = 1;
 		}
 		else if(!strcmp(argv[i],"-DSC")){
 			i++;
@@ -196,7 +201,7 @@ int main(int argc, const char** argv) {
 		TCToChar(ebu->gsi.TCP,*tc);
 	}
 	else{
-		if (shiftTCs(ebu,shift,positive)) {
+		if (shiftTCs(ebu,shift,positive,xTCP)) {
 			fprintf(stderr, "Shifting failed\n");
 			return 1;
 		}

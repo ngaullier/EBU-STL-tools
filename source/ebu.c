@@ -281,7 +281,8 @@ int shiftTC(struct EBU_TC* tc, const struct EBU_TC* shift, const short int posit
 	return 0;
 }
 
-int shiftTCs(struct EBU* ebu, const struct EBU_TC* shift, const int positive){
+int shiftTCs(struct EBU* ebu, const struct EBU_TC* shift, const int positive, const int excludeTCPTCF){
+	if (!excludeTCPTCF) {
 	struct EBU_TC* tc = charToTC(ebu->gsi.TCF);
 	if (shiftTC(tc,shift,positive)) {
 		free(tc);
@@ -301,6 +302,7 @@ int shiftTCs(struct EBU* ebu, const struct EBU_TC* shift, const int positive){
 	
 	TCToChar(ebu->gsi.TCP,*tc);
 	free(tc);
+	}
 
 	unsigned char TNB[6];
 	strncpy(TNB,ebu->gsi.TNB,5);
