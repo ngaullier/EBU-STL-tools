@@ -137,8 +137,11 @@ int main(int argc, const char** argv) {
 		else if(!strcmp(argv[i],"-x")){
 			DontFix = 1;
 		}
-		else{
+		else if (output == NULL) {
 			output = (char *)argv[i];
+		} else {
+			print_version();
+			print_help(argc,argv);
 		}
 	}
 
